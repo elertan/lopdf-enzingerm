@@ -8,7 +8,7 @@ use pom::char_class::{alpha, hex_digit, multispace, oct_digit};
 use pom::parser::*;
 use std::str::{self, FromStr};
 
-fn eol<'a>() -> Parser<'a, u8, u8> {
+pub(crate) fn eol<'a>() -> Parser<'a, u8, u8> {
     (sym(b'\r') * sym(b'\n')) | sym(b'\n') | sym(b'\r')
 }
 
@@ -38,7 +38,7 @@ fn real<'a>() -> Parser<'a, u8, f64> {
     number.collect().convert(str::from_utf8).convert(|s| f64::from_str(&s))
 }
 
-fn hex_char<'a>() -> Parser<'a, u8, u8> {
+pub(crate) fn hex_char<'a>() -> Parser<'a, u8, u8> {
     let number = is_a(hex_digit).repeat(2);
     number
         .collect()
@@ -52,7 +52,7 @@ fn oct_char<'a>() -> Parser<'a, u8, u8> {
         .convert(|v| u8::from_str_radix(str::from_utf8(v).unwrap(), 8))
 }
 
-fn name<'a>() -> Parser<'a, u8, Vec<u8>> {
+pub(crate) fn name<'a>() -> Parser<'a, u8, Vec<u8>> {
     sym(b'/') * (none_of(b" \t\n\r\x0C()<>[]{}/%#") | (sym(b'#') * hex_char())).repeat(0..)
 }
 
@@ -112,7 +112,7 @@ fn array<'a>() -> Parser<'a, u8, Vec<Object>> {
     sym(b'[') * space() * call(_direct_object).repeat(0..) - sym(b']')
 }
 
-fn dictionary<'a>() -> Parser<'a, u8, Dictionary> {
+pub(crate) fn dictionary<'a>() -> Parser<'a, u8, Dictionary> {
     let entry = name() - space() + call(_direct_object);
     let entries = seq(b"<<") * space() * entry.repeat(0..) - seq(b">>");
     entries.map(|entries| {
