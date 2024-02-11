@@ -10,6 +10,9 @@ pub use crate::document::Document;
 
 mod bookmarks;
 pub use crate::bookmarks::Bookmark;
+#[cfg(not(feature = "nom_parser"))]
+#[cfg(feature = "pom_parser")]
+mod cmap_parser;
 pub mod content;
 mod creator;
 mod encodings;

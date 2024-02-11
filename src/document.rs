@@ -1,10 +1,8 @@
-use super::encodings::{self, bytes_to_string, string_to_bytes};
+use super::encodings::{self, bytes_to_string, string_to_bytes, Encoding};
 use super::{Bookmark, Dictionary, Object, ObjectId};
 use crate::xref::Xref;
 use crate::{Error, Result};
-use encoding::all::UTF_16BE;
-use encoding::types::{DecoderTrap, EncoderTrap, Encoding};
-use log::info;
+
 use std::cmp::max;
 use std::collections::{BTreeMap, HashMap};
 use std::io::Write;
@@ -306,36 +304,19 @@ impl Document {
         fonts
     }
 
-    pub fn decode_text(encoding: Option<&str>, bytes: &[u8]) -> String {
+    pub fn decode_text(encoding: Option<&Encoding>, bytes: &[u8]) -> Result<String> {
         if let Some(encoding) = encoding {
-            info!("{}", encoding);
-            match encoding {
-                "StandardEncoding" => bytes_to_string(encodings::STANDARD_ENCODING, bytes),
-                "MacRomanEncoding" => bytes_to_string(encodings::MAC_ROMAN_ENCODING, bytes),
-                "MacExpertEncoding" => bytes_to_string(encodings::MAC_EXPERT_ENCODING, bytes),
-                "WinAnsiEncoding" => bytes_to_string(encodings::WIN_ANSI_ENCODING, bytes),
-                "UniGB-UCS2-H" | "UniGB−UTF16−H" => UTF_16BE.decode(bytes, DecoderTrap::Ignore).unwrap(),
-                "Identity-H" => "?Identity-H Unimplemented?".to_string(), // Unimplemented
-                _ => String::from_utf8_lossy(bytes).to_string(),
-            }
+            encoding.bytes_to_string(bytes)
         } else {
-            bytes_to_string(encodings::STANDARD_ENCODING, bytes)
+            Ok(bytes_to_string(&encodings::STANDARD_ENCODING, bytes))
         }
     }
 
-    pub fn encode_text(encoding: Option<&str>, text: &str) -> Vec<u8> {
+    pub fn encode_text(encoding: Option<&Encoding>, text: &str) -> Vec<u8> {
         if let Some(encoding) = encoding {
-            match encoding {
-                "StandardEncoding" => string_to_bytes(encodings::STANDARD_ENCODING, text),
-                "MacRomanEncoding" => string_to_bytes(encodings::MAC_ROMAN_ENCODING, text),
-                "MacExpertEncoding" => string_to_bytes(encodings::MAC_EXPERT_ENCODING, text),
-                "WinAnsiEncoding" => string_to_bytes(encodings::WIN_ANSI_ENCODING, text),
-                "UniGB-UCS2-H" | "UniGB−UTF16−H" => UTF_16BE.encode(text, EncoderTrap::Ignore).unwrap(),
-                "Identity-H" => vec![], // Unimplemented
-                _ => text.as_bytes().to_vec(),
-            }
+            encoding.string_to_bytes(text)
         } else {
-            string_to_bytes(encodings::STANDARD_ENCODING, text)
+            string_to_bytes(&encodings::STANDARD_ENCODING, text)
         }
     }
 }
